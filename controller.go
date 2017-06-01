@@ -120,12 +120,16 @@ func (c *keepalivedController) fetchConfig() (conf map[string]interface{}, err e
 	if err != nil {
 		return conf, fmt.Errorf("can not get service due to %v", err)
 	}
-	var vip string
+	var vip, vrid string
 	if service.Annotations != nil {
-		vip = service.Annotations[IngressVIPAnnotationKey]
+		vip = service.Annotations[KeepAlivedVIPAnnotationKey]
+		vrid = service.Annotations[KeepAlivedVRIDAnnotationKey]
 	}
 	if vip == "" {
-		return conf, fmt.Errorf("no vip has assigned to ingress service")
+		return conf, fmt.Errorf("no vip has assigned to service")
+	}
+	if vrid == "" {
+		return conf, fmt.Errorf("no vrid has assigned to service")
 	}
 
 	endpoint, err := c.clientset.Core().Endpoints(c.namespace).Get(c.serviceName, meta_v1.GetOptions{})
@@ -160,6 +164,7 @@ func (c *keepalivedController) fetchConfig() (conf map[string]interface{}, err e
 	conf["iface"] = networkInfo.iface
 	conf["selfIP"] = selfIP
 	conf["vip"] = vip
+	conf["vrid"] = vrid
 	conf["neighbors"] = neighbors
 	conf["priority"] = getPriority(selfIP, peers)
 

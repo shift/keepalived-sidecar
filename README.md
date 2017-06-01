@@ -1,35 +1,35 @@
-# keepalived-vip
-A side car deplyed with nginx-ingress-controller for HA
+# keepalived-sidecar
+A side car deplyed with any application who want a vip for HA
 
 # How to use
 
-* First, create a Ingress ReplicationController (two replicas, uisng host network) with the keep-alived-vip side car:
+* First, create a  ReplicationController (many replicas, using host network) with the keepalived-sidecar:
 
 ```
 apiVersion: v1
 kind: ReplicationController
 metadata:
   namespace: "kube-system"
-  name: "ingress-test1"
+  name: "applitaion-test1"
   labels:
-    run: "ingress"
+    keepalived: "application"
 spec:
   replicas: 2
   selector:
-    run: "ingress"
+    keepalived: "application"
   template:
    metadata:
     labels:
-      run: "ingress"
+      keepalived: "application"
    spec:
     hostNetwork: true
     containers:
-      - image: "ingress-keepalived-vip:v0.0.1"
+      - image: "keepalived-sidecar:v0.1.0"
         imagePullPolicy: "Always"
-        name: "keepalived-vip"
+        name: "keepalived-sidecar"
         resources:
           limits:
-            cpu: 50m
+            cpu: 100m
             memory: 100Mi
           requests:
             cpu: 10m
@@ -46,10 +46,10 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: SERVICE_NAME
-            value: "ingress"
-      - image: "ingress-controller:v0.0.1"
+            value: "application-service"
+      - image: "any-application:v1.0.0"
         imagePullPolicy: "Always"
-        name: "ingress-controller"
+        name: "any-application"
         resources:
           limits:
             cpu: 200m
@@ -59,20 +59,20 @@ spec:
             memory: 200Mi
 ```
 
-* Then create a Service named "ingress" pointing to the Ingress ReplicaSet, and assign a vip to the service using annotation:
-
+* Then create a Service named "application-service" pointing to the RC and assign a vip to the service using annotation:
 ```
 apiVersion: v1
 kind: Service
 metadata:
-  name: ingress
+  name: application-service
   namespace: kube-system
   annotations:
-    "ingress.alpha.k8s.io/ingress-vip": "192.168.10.1"
+    "keepalived.k8s.io/vip": "192.168.10.1"
+    "keepalived.k8s.io/vrid": "50"
 spec:
   type: ClusterIP
   selector:
-    - run: "ingress"
+    keepalived: "application"
   ports:
   - name: http
     port: 80
@@ -80,7 +80,5 @@ spec:
     targetPort: 80
 ```
 
-* keepalived-vip side car container will watch the "ingress" Service and update keepalived's config.
-
-
-* User could access in-cluster service by the Ingress VIP.
+* keepalived-sidecar container will watch the specified Service and update keepalived's config.
+* User could access in-cluster service by the keepalived VIP.

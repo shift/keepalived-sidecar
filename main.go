@@ -22,11 +22,10 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/kubernetes/pkg/util/wait"
 
 	"github.com/golang/glog"
 	"github.com/spf13/pflag"
-
-	"k8s.io/kubernetes/pkg/util/wait"
 )
 
 var (
@@ -44,7 +43,8 @@ const (
 	keepalivedTmpl = "keepalived.tmpl"
 	keepalivedCfg  = "/etc/keepalived/keepalived.conf"
 
-	IngressVIPAnnotationKey = "ingress.alpha.k8s.io/ingress-vip"
+	KeepAlivedVIPAnnotationKey  = "keepalived.k8s.io/vip"
+	KeepAlivedVRIDAnnotationKey = "keepalived.k8s.io/vrid"
 )
 
 func init() {

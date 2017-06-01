@@ -1,4 +1,8 @@
-FROM gcr.io/google_containers/ubuntu-slim:0.5
+FROM cargo.caicloud.io/caicloud/keepalived:v1.2.19
+
+# Set the default timezone to Shanghai
+RUN echo "Asia/Shanghai" > /etc/timezone
+RUN dpkg-reconfigure -f noninteractive tzdata
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
   libssl1.0.0 \
@@ -19,8 +23,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-COPY keepalived-vip /
+COPY keepalived-sidecar /
 COPY keepalived.tmpl /
 COPY keepalived.conf /etc/keepalived
 
-CMD ["./keepalived-vip"]
+CMD ["./keepalived-sidecar"]
