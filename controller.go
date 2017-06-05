@@ -69,6 +69,13 @@ func newKeepalivedController(clientset *kubernetes.Clientset, namespace, service
 func (c *keepalivedController) Run(period time.Duration, stopCh <-chan struct{}) {
 	go c.keepalived.Start()
 
+	ch := make(chan struct{})
+	wait.Until(func() {
+		if c.keepalived.cmd != nil && c.keepalived.cmd.Process != nil {
+			close(ch)
+		}
+	}, time.Second, ch)
+
 	go wait.Until(func() {
 		if err := c.Sync(); err != nil {
 			glog.Error(err)
