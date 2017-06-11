@@ -1,0 +1,72 @@
+apiVersion: "v1"
+kind: "List"
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: keepalived-service
+    namespace: kube-system
+    annotations:
+      "keepalived.k8s.io/vip": "192.168.10.2"
+      "keepalived.k8s.io/vrid": "51"
+  spec:
+    type: ClusterIP
+    selector:
+      keepalived: "application"
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    namespace: "kube-system"
+    name: keepalived
+    labels:
+      keepalived: "application"
+  spec:
+    replicas: 2
+    # selector:
+    #   keepalived: "application"
+    template:
+      metadata:
+        labels:
+          keepalived: "application"
+      spec:
+        hostNetwork: true
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: kubernetes.io/hostname
+                  operator: In
+                  values:
+                  - kube-node-72
+                  - kube-node-73
+        containers:
+        - image: "cargo.caicloud.io/caicloud/keepalived-sidecar:v0.1.1"
+          imagePullPolicy: "Always"
+          name: "keepalived-sidecar"
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 10Mi
+          securityContext:
+            privileged: true
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SERVICE_NAME
+              value: "keepalived-service"
