@@ -69,6 +69,8 @@ metadata:
   annotations:
     "keepalived.k8s.io/vip": "192.168.10.1"
     "keepalived.k8s.io/vrid": "50"
+    "keepalived.k8s.io/iface": "ens15f1"
+    "keepalived.k8s.io/trackiface": "ens15f0"
 spec:
   type: ClusterIP
   selector:

@@ -45,6 +45,8 @@ const (
 
 	KeepAlivedVIPAnnotationKey  = "keepalived.k8s.io/vip"
 	KeepAlivedVRIDAnnotationKey = "keepalived.k8s.io/vrid"
+	KeepAlivedInterfaceKey = "keepalived.k8s.io/iface"
+	KeepAlivedTrackInterfaceKey = "keepalived.k8s.io/trackiface"
 )
 
 func init() {

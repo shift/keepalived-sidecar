@@ -1,19 +1,17 @@
-{{ $iface := .iface }}
-
 global_defs {
   vrrp_version 3
 }
 
 vrrp_instance vips {
   state BACKUP
-  interface {{ $iface }}
-  virtual_router_id 50
+  interface {{ .iface }}
+  virtual_router_id {{ .vrid }}
   priority {{ .priority }}
   nopreempt
   advert_int 1
 
   track_interface {
-    {{ $iface }}
+    {{ .trackiface }}
   }
 
   authentication {

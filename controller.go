@@ -127,18 +127,25 @@ func (c *keepalivedController) fetchConfig() (conf map[string]interface{}, err e
 	if err != nil {
 		return conf, fmt.Errorf("can not get service due to %v", err)
 	}
-	var vip, vrid string
+	var vip, vrid, iface, track_iface string
 	if service.Annotations != nil {
 		vip = service.Annotations[KeepAlivedVIPAnnotationKey]
 		vrid = service.Annotations[KeepAlivedVRIDAnnotationKey]
+                iface = service.Annotations[KeepAlivedInterfaceKey]
+                track_iface = service.Annotations[KeepAlivedTrackInterfaceKey]
 	}
 	if vip == "" {
-		return conf, fmt.Errorf("no vip has assigned to service")
+		return conf, fmt.Errorf("no vip has been assigned to service")
 	}
 	if vrid == "" {
-		return conf, fmt.Errorf("no vrid has assigned to service")
+		return conf, fmt.Errorf("no vrid has been assigned to service")
 	}
-
+	if iface == "" {
+		return conf, fmt.Errorf("no iface has been assigned to service")
+	}
+	if track_iface == "" {
+		return conf, fmt.Errorf("no trackiface has been assigned to service")
+	}
 	endpoint, err := c.clientset.Core().Endpoints(c.namespace).Get(c.serviceName, meta_v1.GetOptions{})
 	if err != nil {
 		return conf, fmt.Errorf("can not get endpoint due to %v", err)
@@ -162,13 +169,10 @@ func (c *keepalivedController) fetchConfig() (conf map[string]interface{}, err e
 	selfIP := pod.Status.PodIP
 
 	neighbors := getNeighbors(selfIP, peers)
-	networkInfo, err := getNetworkInfo(selfIP)
-	if err != nil {
-		return conf, fmt.Errorf("can not get network info due to %v", err)
-	}
 
 	conf = make(map[string]interface{})
-	conf["iface"] = networkInfo.iface
+	conf["iface"] = iface
+        conf["trackiface"] = track_iface
 	conf["selfIP"] = selfIP
 	conf["vip"] = vip
 	conf["vrid"] = vrid
